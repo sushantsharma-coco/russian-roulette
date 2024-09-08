@@ -1,13 +1,15 @@
-// src/index.ts
-import express, { Request, Response } from "express";
+import { Request, Response } from "express";
+import { dbConnect } from "./database/index.database";
+import { app, httpServer } from "./socket.io/index.socket";
 
-const app = express();
-const port = 3000;
+dbConnect();
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("Hello TypeScript with Express!");
+  return res.status(200).send({ message: "home page", statusCode: 200 });
 });
 
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+httpServer.listen(process.env.PORT || 3000, () => {
+  console.log(
+    `Server is running at http://localhost:${process.env.PORT ?? 3000}`
+  );
 });

@@ -27,15 +27,15 @@ export class RussianRoulette extends BaseGameState {
       console.log("--------connection-----------");
       console.log("userData :", userData);
 
-      clientSocket.on("ROOM_CREATE", this.onRoomCreate.bind(this));
+      clientSocket.on("ROOM_CREATE", this.onRoomCreate.bind(clientSocket));
 
-      clientSocket.on("SET_BET", this.onSetBetAmount.bind(this));
+      clientSocket.on("SET_BET", this.onSetBetAmount.bind(clientSocket));
 
-      clientSocket.on("SPIN_REELS", this.onSpinReels.bind(this));
+      clientSocket.on("SPIN_REELS", this.onSpinReels.bind(clientSocket));
 
-      clientSocket.on("REPLAY_MATCH", this.onReplayMatch.bind(this));
+      clientSocket.on("REPLAY_MATCH", this.onReplayMatch.bind(clientSocket));
 
-      clientSocket.on("EXIT_MATCH", this.onExitMatch.bind(this));
+      clientSocket.on("EXIT_MATCH", this.onExitMatch.bind(clientSocket));
     } catch (error: any) {
       console.error("error occured during onConnect :", error?.message);
 

@@ -1,4 +1,6 @@
 import { DisconnectReason, Namespace, Socket } from "socket.io";
+import { redisClient } from "../cache/redisClient";
+import { randomUUID } from "crypto";
 
 export class SlotMachine {
   io: Namespace;
@@ -12,34 +14,123 @@ export class SlotMachine {
   async onConnect(clientSocket: Socket) {
     console.log("++++++++++++CONNECTION++++++++++++");
 
-    clientSocket.on("START_GAME", this.onStartGame.bind(this));
+    let { id } = clientSocket.handshake.query;
+    if (!id) {
+      clientSocket.emit("ERROR", "USER ID NOT FOUND");
+      return;
+    }
 
-    clientSocket.on("SPIN_REELS", this.onSpinReels.bind(this));
+    clientSocket.data["id"] = id;
 
-    clientSocket.on("LOOP_MATCH", this.onLoopMatch.bind(this));
+    clientSocket.on("START_GAME", this.onStartGame.bind(this, clientSocket));
 
-    clientSocket.on("EXIT_MATCH", this.onExitMatch.bind(this));
+    clientSocket.on("SPIN_REELS", this.onSpinReels.bind(this, clientSocket));
 
-    clientSocket.on("disconnect", this.onDisconnect.bind(this));
+    clientSocket.on("LOOP_MATCH", this.onLoopMatch.bind(this, clientSocket));
+
+    clientSocket.on("EXIT_MATCH", this.onExitMatch.bind(this, clientSocket));
+
+    clientSocket.on("disconnect", this.onDisconnect.bind(clientSocket));
   }
 
   async onStartGame(clientSocket: Socket) {
-    console.log("clientSocket id", clientSocket.id, " start game");
+    try {
+      // request to operator for details
+      // let response = await fetch("https://operator", {
+      //   headers: {
+      //     Authorization: "",
+      //     // other clients details
+      //   },
+      // });
+
+      // if (!response)
+      //   this.errorMessageEmmiter(
+      //     clientSocket,
+      //     "unable to get response from the operator"
+      //   );
+
+      let userkey = `user:${clientSocket.data.id}`;
+      let userDetails = await redisClient.getFromRedis(userkey);
+
+      if (!userDetails || !userDetails.userId)
+        this.errorMessageEmmiter(
+          clientSocket,
+          "user details not found in redis"
+        );
+
+      let gameId = randomUUID();
+
+      clientSocket.data = {
+        ...userDetails,
+        gameId,
+        socketId: clientSocket.id,
+        currentStep: "START_GAME",
+        nextStep: "SPIN_REELS",
+      };
+
+      let gamekey = `slot-machine:gameState:${clientSocket.data.gameId}`;
+
+      let res = await redisClient.setToRedis(gamekey, clientSocket.data);
+
+      if (!res)
+        this.errorMessageEmmiter(
+          clientSocket,
+          "unable to set game state to redis"
+        );
+
+      this.successMessageEmmiter(clientSocket, {
+        message: "new game initialized successfully",
+        ...clientSocket.data,
+      });
+
+      return;
+    } catch (error: any) {
+      console.error("error in start:", error?.message);
+      this.errorMessageEmmiter(clientSocket, error?.message);
+    }
   }
 
   async onSpinReels(clientSocket: Socket) {
-    console.log("clientSocket id", clientSocket.id, " start game");
+    try {
+      console.log("clientSocket id", clientSocket.id, " SPIN game");
+    } catch (error: any) {
+      console.error("error in start:", error?.message);
+    }
   }
 
   async onLoopMatch(clientSocket: Socket) {
-    console.log("clientSocket id", clientSocket.id, " start game");
+    try {
+      console.log("clientSocket id", clientSocket.id, " LOOP game");
+    } catch (error: any) {
+      console.error("error in start:", error?.message);
+    }
   }
 
   async onExitMatch(clientSocket: Socket) {
-    console.log("clientSocket id", clientSocket.id, " start game");
+    try {
+      console.log("clientSocket id", clientSocket.id, " EXIT game");
+    } catch (error: any) {
+      console.error("error in start:", error?.message);
+    }
   }
 
   async onDisconnect(reason: DisconnectReason, clientSocket: Socket) {
-    console.log("user disconnected with socket.id  due to reason ", reason);
+    try {
+      console.log(
+        "user disconnected with socket.id  due to reason ",
+        clientSocket.id,
+        reason
+      );
+    } catch (error: any) {
+      console.error("error in disconnection:", error?.message);
+    }
+  }
+
+  successMessageEmmiter(clientSocket: Socket, message: string) {
+    clientSocket.emit("MESSAGE", message);
+  }
+
+  errorMessageEmmiter(clientSocket: Socket, message: string) {
+    clientSocket.emit("ERROR", message);
   }
 }

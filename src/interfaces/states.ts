@@ -1,4 +1,4 @@
-export interface IGameState extends Document {
+export interface ISlotGameState {
   userId: string;
   gameId: string;
   socketId: string;
@@ -9,4 +9,12 @@ export interface IGameState extends Document {
   looseAmt: number;
   currentStep: string;
   nextStep: string;
+}
+
+export interface IPlayerState {
+  userId: string;
+  gameId: string;
+  socketId: string;
+  roomId: string;
+  walletBalance: number;
 }

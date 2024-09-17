@@ -1,6 +1,6 @@
 import { Namespace, Socket } from "socket.io";
 import { BaseGameState } from "./baseGameState";
-import { IGameState } from "../../interfaces/gameState.schema";
+import { ISlotGameState } from "../../interfaces/states";
 
 export class RussianRoulette extends BaseGameState {
   io: Namespace;
@@ -17,7 +17,7 @@ export class RussianRoulette extends BaseGameState {
     try {
       let { id } = clientSocket.handshake.query;
 
-      const userData: IGameState = {
+      const userData: ISlotGameState = {
         ...clientSocket.data,
         userId: id,
         socketId: clientSocket.id,

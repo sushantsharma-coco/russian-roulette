@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-import { IGameState } from "../interfaces/gameState.schema";
+import { ISlotGameState } from "../interfaces/states";
 
-const gameStateSchema = new mongoose.Schema<IGameState>({
+const slotGameStateSchema = new mongoose.Schema<ISlotGameState>({
   userId: { type: String, required: true },
   gameId: { type: String, required: true },
   socketId: { type: String, required: true },
@@ -14,4 +14,7 @@ const gameStateSchema = new mongoose.Schema<IGameState>({
   nextStep: { type: String, required: true },
 });
 
-export const GameState = mongoose.model("GameState", gameStateSchema);
+export const SlotGameState = mongoose.model(
+  "SlotGameState",
+  slotGameStateSchema
+);

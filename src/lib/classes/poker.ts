@@ -1,5 +1,10 @@
 import { Namespace, Socket } from "socket.io";
 
+// total states 3:
+// player state
+// game state
+// room state
+
 export class Poker {
   io: Namespace;
 
@@ -13,6 +18,8 @@ export class Poker {
     try {
       console.log("+++++++++CONNECTION+++++++++");
 
+      clientSocket.on("ROOM_CREATE", this.onRoomCreate.bind(this));
+
       clientSocket.on("START_MATCH", this.onStartGame.bind(this));
 
       clientSocket.on("CALL", this.onCall.bind(this));
@@ -24,6 +31,13 @@ export class Poker {
       clientSocket.on("RAISE", this.onRaise.bind(this));
     } catch (error: any) {
       console.error("error in onConnect", error?.message);
+    }
+  }
+
+  async onRoomCreate(clientSocket: Socket) {
+    try {
+    } catch (error: any) {
+      console.error("error in room create", error?.message);
     }
   }
 

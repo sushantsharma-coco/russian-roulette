@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 import { IUserSchema } from "../interfaces/user.schema";
 
 const userSchema = new mongoose.Schema<IUserSchema>({
@@ -28,5 +29,21 @@ const userSchema = new mongoose.Schema<IUserSchema>({
     default: false,
   },
 });
+
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+userSchema.methods.isPasswordCorrect = async function (
+  password: string
+): Promise<boolean> {
+  return await bcrypt.compare(password, this.password);
+};
+
+userSchema.methods.generateAccessToken = async function () {
+  return "jsonwebtoken";
+};
 
 export const User = mongoose.model("User", userSchema);

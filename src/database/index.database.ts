@@ -9,7 +9,7 @@ export const dbConnect = async () => {
 
     if (!connection) throw new Error("mongodb connection failed");
 
-    console.error("mongodb connection successful", connection.version);
+    console.log("mongodb connection successful", connection.version);
   } catch (error: any) {
     console.error("error during mongodb connection :", error?.message);
 

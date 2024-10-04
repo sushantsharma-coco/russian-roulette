@@ -2,6 +2,7 @@ import { Namespace, Socket } from "socket.io";
 import { BaseGameState } from "./baseGameState";
 import { IGameState } from "../../interfaces/states";
 import { RedisError } from "../../utils/RedisError.utils";
+import { redisClient } from "../cache/redisClient";
 
 export class Roulette extends BaseGameState {
   io: Namespace;
@@ -32,6 +33,8 @@ export class Roulette extends BaseGameState {
         "ROOM_CREATE",
         this.onRoomCreate.bind(this, clientSocket)
       );
+
+      clientSocket.on("JOIN_ROOM", this.onJoinRoom.bind(this, clientSocket));
 
       clientSocket.on("SET_BET", this.onSetBetAmount.bind(this, clientSocket));
 
@@ -72,10 +75,34 @@ export class Roulette extends BaseGameState {
       } as unknown as IGameState;
 
       clientSocket.data["gameState"] = gameState;
-
       // this must be stored in redis ? the room state and game state and roomid to id list
+
+      // game set to redis
+      await redisClient.setToRedis(gameId, gameState);
+
+      // room set to redis
+      await redisClient.setToRedis(roomId, gameState);
+
+      clientSocket.emit(
+        "MESSAGE",
+        `room created with roomId : ${roomId} by host : ${clientSocket.id} and gameId: ${gameId}`
+      );
+
+      return;
     } catch (error: any) {
       console.error("error occured during onSetBetAmount :", error?.message);
+    }
+  }
+
+  async onJoinRoom(clientSocket: Socket): Promise<any> {
+    try {
+      if (clientSocket.data.host)
+        throw new RedisError(
+          400,
+          "host cannot join the room as they are already player"
+        );
+    } catch (error: any) {
+      console.error("error occured during onJoinRoom :", error?.message);
     }
   }
 

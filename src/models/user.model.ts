@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { IUserSchema } from "../interfaces/user.schema";
 
 const userSchema = new mongoose.Schema<IUserSchema>({
@@ -43,7 +44,7 @@ userSchema.methods.isPasswordCorrect = async function (
 };
 
 userSchema.methods.generateAccessToken = async function () {
-  return "jsonwebtoken";
+  return jwt.sign({}, process.env.JWT_PRIVATE_KEY || "", {});
 };
 
 export const User = mongoose.model("User", userSchema);

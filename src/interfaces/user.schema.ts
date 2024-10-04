@@ -5,4 +5,6 @@ export interface IUserSchema extends Document {
   mobileNumber: number;
   role: string;
   isValid: boolean;
+  isPasswordCorrect(password: string): Promise<boolean>;
+  generateAccessToken(): Promise<string>;
 }

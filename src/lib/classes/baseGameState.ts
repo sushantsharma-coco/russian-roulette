@@ -6,4 +6,5 @@ export abstract class BaseGameState {
   abstract onConnect(socket: Socket): void;
   abstract onPlayerLeave(): void;
   abstract onPlayerLeaveMatch(): void;
+  abstract onReJoinMatch(): void;
 }

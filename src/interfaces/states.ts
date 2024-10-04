@@ -1,9 +1,9 @@
-export interface ISlotGameState {
-  userId: string;
+export interface IGameState {
+  userId: string[];
   gameId: string;
-  socketId: string;
+  socketId: string[];
   roomId: String;
-  walletBalance: number;
+  totalBalance: number;
   betAmt: number;
   winAmt: number;
   looseAmt: number;
@@ -16,5 +16,5 @@ export interface IPlayerState {
   gameId: string;
   socketId: string;
   roomId: string;
-  walletBalance: number;
+  totalBalance: number;
 }

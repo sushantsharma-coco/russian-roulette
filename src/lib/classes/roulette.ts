@@ -1,6 +1,7 @@
 import { Namespace, Socket } from "socket.io";
 import { BaseGameState } from "./baseGameState";
-import { ISlotGameState } from "../../interfaces/states";
+import { IGameState } from "../../interfaces/states";
+import { RedisError } from "../../utils/RedisError.utils";
 
 export class Roulette extends BaseGameState {
   io: Namespace;
@@ -17,7 +18,7 @@ export class Roulette extends BaseGameState {
     try {
       let { id } = clientSocket.handshake.query;
 
-      const userData: ISlotGameState = {
+      const userData: IGameState = {
         ...clientSocket.data,
         userId: id,
         socketId: clientSocket.id,
@@ -27,15 +28,21 @@ export class Roulette extends BaseGameState {
       console.log("--------connection-----------");
       console.log("userData :", userData);
 
-      clientSocket.on("ROOM_CREATE", this.onRoomCreate.bind(clientSocket));
+      clientSocket.on(
+        "ROOM_CREATE",
+        this.onRoomCreate.bind(this, clientSocket)
+      );
 
-      clientSocket.on("SET_BET", this.onSetBetAmount.bind(clientSocket));
+      clientSocket.on("SET_BET", this.onSetBetAmount.bind(this, clientSocket));
 
-      clientSocket.on("SPIN_REELS", this.onSpinReels.bind(clientSocket));
+      clientSocket.on("SPIN_REELS", this.onSpinReels.bind(this, clientSocket));
 
-      clientSocket.on("REPLAY_MATCH", this.onReplayMatch.bind(clientSocket));
+      clientSocket.on(
+        "REPLAY_MATCH",
+        this.onReplayMatch.bind(this, clientSocket)
+      );
 
-      clientSocket.on("EXIT_MATCH", this.onExitMatch.bind(clientSocket));
+      clientSocket.on("EXIT_MATCH", this.onExitMatch.bind(this, clientSocket));
     } catch (error: any) {
       console.error("error occured during onConnect :", error?.message);
 
@@ -45,6 +52,28 @@ export class Roulette extends BaseGameState {
 
   async onRoomCreate(clientSocket: Socket): Promise<any> {
     try {
+      console.log(clientSocket.id, ":", clientSocket.data);
+
+      if (!clientSocket.data.host)
+        throw new RedisError(400, "can't create room if not host");
+
+      let gameId = crypto.randomUUID();
+      gameId = `roulette:games:${gameId}`;
+
+      let roomId = crypto.randomUUID();
+      roomId = `roulette:rooms:${roomId}`;
+
+      const gameState = {
+        userId: [clientSocket.data.userId],
+        gameId: gameId,
+        socketId: [clientSocket.id],
+        roomId: roomId,
+        totalBalance: 1000, //dummy money must come from opertor
+      } as unknown as IGameState;
+
+      clientSocket.data["gameState"] = gameState;
+
+      // this must be stored in redis ? the room state and game state and roomid to id list
     } catch (error: any) {
       console.error("error occured during onSetBetAmount :", error?.message);
     }
@@ -81,4 +110,6 @@ export class Roulette extends BaseGameState {
   onPlayerLeave(): void {}
 
   onPlayerLeaveMatch(): void {}
+
+  onReJoinMatch(): void {}
 }

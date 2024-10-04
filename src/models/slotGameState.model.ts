@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
-import { ISlotGameState } from "../interfaces/states";
+import { IGameState } from "../interfaces/states";
 
-const slotGameStateSchema = new mongoose.Schema<ISlotGameState>({
-  userId: { type: String, required: true },
+const slotGameStateSchema = new mongoose.Schema<IGameState>({
+  userId: [{ type: String, required: true }],
   gameId: { type: String, required: true },
-  socketId: { type: String, required: true },
+  socketId: [{ type: String, required: true }],
   roomId: { type: String, required: true },
-  walletBalance: { type: Number, required: true },
+  totalBalance: { type: Number, required: true },
   betAmt: { type: Number, required: true },
   winAmt: { type: Number, required: true },
   looseAmt: { type: Number, required: true },

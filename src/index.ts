@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
-import { dbConnect } from "./database/index.database";
+import { mongodbConnect } from "./database/mongodb.database";
 import { app, httpServer } from "./socket.io/index.socket";
 import { redisClient } from "./lib/cache/redisClient";
+import { mysqlConnect } from "./database/mysql.database";
 
-dbConnect();
+mongodbConnect();
+mysqlConnect();
 
 app.get("/", (req: Request, res: Response) => {
   return res.status(200).send({ message: "home page", statusCode: 200 });

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-export const dbConnect = async () => {
+export const mongodbConnect = async () => {
   try {
     const connection = await mongoose.connect(
       process.env.MONGO_URL || "mongodb://127.0.0.1/russian-roulette",

@@ -2,7 +2,7 @@ import { Namespace, Socket } from "socket.io";
 import { BaseGameState } from "./baseGameState";
 import { ISlotGameState } from "../../interfaces/states";
 
-export class RussianRoulette extends BaseGameState {
+export class Roulette extends BaseGameState {
   io: Namespace;
 
   constructor(serverSocket: Namespace) {

@@ -5,7 +5,7 @@ import { redisClient } from "./lib/cache/redisClient";
 import { mysqlConnect } from "./database/mysql.database";
 
 mongodbConnect();
-mysqlConnect();
+// mysqlConnect();
 
 app.get("/", (req: Request, res: Response) => {
   return res.status(200).send({ message: "home page", statusCode: 200 });

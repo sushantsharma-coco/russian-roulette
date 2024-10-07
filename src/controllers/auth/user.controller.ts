@@ -24,7 +24,8 @@ export const login = async (req: Request, res: Response) => {
 
     if (!isPasswordValid) throw new ApiError(400, "invalid password");
 
-    let accessToken = userExists.generateAccessToken();
+    let accessToken = await userExists.generateAccessToken();
+    console.log(accessToken);
 
     return res
       .cookie("accessToken", accessToken, options)
@@ -32,5 +33,24 @@ export const login = async (req: Request, res: Response) => {
       .send(new ApiResponse(200, { accessToken, message: "login successful" }));
   } catch (error) {
     console.error("error during login");
+  }
+};
+
+export const signUp = async (req: Request, res: Response) => {
+  try {
+    const { name, email, password, mobileNumber, role } = req.body;
+
+    const user = await User.create({
+      name,
+      email,
+      password,
+      mobileNumber,
+      role,
+      isValid: true,
+    });
+
+    return res.status(201).send(new ApiResponse(201, user, "user created"));
+  } catch (error: any) {
+    console.error(error?.message);
   }
 };

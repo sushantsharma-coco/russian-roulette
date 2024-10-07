@@ -3,6 +3,7 @@ import { mongodbConnect } from "./database/mongodb.database";
 import { app, httpServer } from "./socket.io/index.socket";
 import { redisClient } from "./lib/cache/redisClient";
 import { mysqlConnect } from "./database/mysql.database";
+import authRouter from "./routes/auth/user.routes";
 
 mongodbConnect();
 // mysqlConnect();
@@ -10,6 +11,8 @@ mongodbConnect();
 app.get("/", (req: Request, res: Response) => {
   return res.status(200).send({ message: "home page", statusCode: 200 });
 });
+
+app.use("/api/v1/auth", authRouter);
 
 httpServer.listen(process.env.PORT || 3000, async () => {
   let x = {

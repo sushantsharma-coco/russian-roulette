@@ -5,6 +5,10 @@ import { Roulette } from "../lib/classes/roulette";
 import { SlotMachine } from "../lib/classes/slotMachine";
 
 export const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 export const httpServer = createServer(app);
 export const io = new Server(httpServer, {
   cors: {
@@ -12,8 +16,8 @@ export const io = new Server(httpServer, {
   },
 });
 
-export const russianRoulette = io.of("/russian-roulette");
+export const roulette = io.of("/roulette");
 export const slotMachine = io.of("/slot-machine");
 
-new Roulette(russianRoulette);
-new SlotMachine(slotMachine);
+new Roulette(roulette);
+// new SlotMachine(slotMachine);

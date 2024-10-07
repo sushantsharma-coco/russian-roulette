@@ -1,6 +1,6 @@
 export enum playerStatus {
-  HOST,
-  PLAYER,
+  host = "HOST",
+  player = "PLAYER",
 }
 
 export interface IRedisUser {

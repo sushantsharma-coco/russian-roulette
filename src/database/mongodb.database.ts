@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 export const mongodbConnect = async () => {
   try {
     const connection = await mongoose.connect(
-      process.env.MONGO_URL || "mongodb://127.0.0.1/russian-roulette",
+      process.env.MONGO_URL || "mongodb://127.0.0.1/roulette",
       {}
     );
 

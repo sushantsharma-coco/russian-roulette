@@ -35,6 +35,15 @@ export class Roulette extends BaseGameState {
     try {
       let { id } = clientSocket.handshake.query;
 
+      clientSocket.data = {
+        token:
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NzAzODRiYzJhMzYxMjg0MTIwNGMwMDYiLCJlbWFpbCI6InRlc3RAZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3MjgyODQyNDQsImV4cCI6MTcyODcxNjI0NH0.QKHraLApPZKiu2PXZM77fVzCB1DDftEPGbhY5UVNgok",
+        amount: 250,
+        userName: "sunil",
+        userId: "670384bc2a3612841204c006",
+        status: true,
+      };
+
       const userData: IRedisUser = {
         ...clientSocket.data,
         userId: id,
@@ -76,7 +85,11 @@ export class Roulette extends BaseGameState {
 
   async onRoomCreate(clientSocket: Socket): Promise<any> {
     try {
+      console.log("+++++ROOM_CREATE+++++");
+
       console.log(clientSocket.id, ":", clientSocket.data);
+
+      clientSocket.data.host = true;
 
       if (!clientSocket.data.host)
         throw new RedisError(400, "can't create room if not host");
@@ -105,7 +118,7 @@ export class Roulette extends BaseGameState {
         socketId: clientSocket.id,
         roomId: roomId,
         totalBalance: clientSocket.data.amount,
-        playerStatus: playerStatus.HOST,
+        playerStatus: playerStatus.host,
       };
 
       const gameState: IGameState = {
@@ -127,10 +140,13 @@ export class Roulette extends BaseGameState {
       // room set to redis
       await redisClient.setToRedis(roomId, gameState);
 
-      clientSocket.emit(
-        "MESSAGE",
-        `room created with roomId : ${roomId} by host : ${clientSocket.id} and gameId: ${gameId}`
-      );
+      clientSocket.emit("MESSAGE", {
+        message: `room created with roomId : ${roomId} by host : ${clientSocket.id} and gameId: ${gameId}`,
+        gameState,
+      });
+
+      console.log(gameState);
+      console.log(playerData);
 
       return;
     } catch (error: any) {
@@ -151,23 +167,57 @@ export class Roulette extends BaseGameState {
       if (!data.roomId || !data.gameId)
         throw new RedisError(400, "gameId or roomId is invalid or not sent");
 
-      let roomData = await redisClient.getFromRedis(data.roomId);
+      let roomDataGmSte = await redisClient.getFromRedis(data.roomId);
+      console.log("roomDataGmSte", roomDataGmSte);
 
-      if (!roomData)
+      if (!roomDataGmSte)
         throw new RedisError(404, "room with roomId doesn't exist");
 
-      if (roomData?.gameId !== data.gameId)
+      if (roomDataGmSte?.gameId !== data.gameId)
         throw new RedisError(400, "gameId of selected room is incorrect");
+
+      if (roomDataGmSte?.roomId !== data.roomId)
+        throw new RedisError(400, "roomId of selected room is incorrect");
 
       const rouletteBaseState = await this.gameBaseState();
 
-      if (roomData.userId?.length >= rouletteBaseState.playerStregnth)
+      if (
+        // roomDataGmSte.userId?.length >= rouletteBaseState.playerStregnth ||
+        roomDataGmSte.userId?.length >= 8
+      )
         throw new RedisError(400, "room is full");
 
-      roomData.userId.push(clientSocket?.data?.userId);
-      roomData.socketId.push(clientSocket.id);
+      if ([...clientSocket.rooms].length > 1)
+        throw new RedisError(403, "cannot join multiple match at once");
 
-      clientSocket.data["gameState"] = roomData?.gameState;
+      const playerData: IPlayerState = {
+        userId: clientSocket.data.userId,
+        socketId: clientSocket.id,
+        gameId: data.gameId,
+        roomId: data.roomId,
+        totalBalance: clientSocket.data.amount,
+        playerStatus: playerStatus.player,
+      };
+
+      clientSocket.data = playerData;
+      clientSocket.join(data.roomId);
+
+      roomDataGmSte.userIds.push(clientSocket?.data?.userId);
+      roomDataGmSte.socketIds.push(clientSocket.id);
+      roomDataGmSte.playerStates.push(playerData);
+
+      await redisClient.setToRedis(roomDataGmSte.roomId, roomDataGmSte);
+      await redisClient.setToRedis(roomDataGmSte.gameId, roomDataGmSte);
+
+      clientSocket.emit(
+        "MESSAGE",
+        `room joined with roomId : ${roomDataGmSte.roomId} by host : ${clientSocket.id} and gameId: ${roomDataGmSte.gameId}`
+      );
+
+      clientSocket.to(roomDataGmSte.roomId).emit("MESSAGE", {
+        message: `user with userId: ${clientSocket.data.userId} and socketId: ${clientSocket.id} joined the game`,
+        roomDataGmSte,
+      });
     } catch (error: any) {
       console.error("error occured during onJoinRoom :", error?.message);
     }

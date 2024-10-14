@@ -21,7 +21,11 @@ export class RedisClient {
       return JSON.parse(result);
     }
   }
-  async setToRedis(key: string, data: any, ttl: number = 3600): Promise<any> {
+  async setToRedis(
+    key: string | String,
+    data: any,
+    ttl: number = 3600
+  ): Promise<any> {
     if (!this.connection) this.initRedis();
 
     if (this.connection) {
